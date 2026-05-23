@@ -3,260 +3,258 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C# Knowledge Agent</title>
+<title>C# Agent</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- Sidebar -->
-<aside class="sidebar">
-  <div class="sidebar-header">
+<!-- ── Top Bar ── -->
+<header class="topbar">
+  <div class="topbar-left">
     <div class="logo">
-      <span class="logo-bracket">{</span>
-      <span class="logo-text">C#</span>
-      <span class="logo-bracket">}</span>
+      <div class="logo-mark">C#</div>
+      <span class="logo-name">Agent</span>
     </div>
-    <p class="logo-sub">Knowledge Agent</p>
+    <nav class="tab-nav" role="tablist">
+      <button class="tab-btn active" data-panel="kb" onclick="switchTab(this,'kb')">
+        Knowledge Base
+        <span class="tab-badge" id="kb-badge">0</span>
+      </button>
+      <button class="tab-btn" data-panel="editor" onclick="switchTab(this,'editor')">Editor</button>
+      <button class="tab-btn" data-panel="agent"  onclick="switchTab(this,'agent')">AI Agent</button>
+      <button class="tab-btn" data-panel="verify" onclick="switchTab(this,'verify')">Verify</button>
+    </nav>
   </div>
-
-  <nav class="sidebar-nav">
-    <button class="nav-item active" data-panel="knowledge" onclick="showPanel('knowledge')">
-      <span class="nav-icon">◈</span>
-      <span>Knowledge Base</span>
-    </button>
-    <button class="nav-item" data-panel="editor" onclick="showPanel('editor')">
-      <span class="nav-icon">◧</span>
-      <span>Code Editor</span>
-    </button>
-    <button class="nav-item" data-panel="agent" onclick="showPanel('agent')">
-      <span class="nav-icon">◉</span>
-      <span>AI Agent</span>
-    </button>
-    <button class="nav-item" data-panel="verify" onclick="showPanel('verify')">
-      <span class="nav-icon">◎</span>
-      <span>Verify</span>
-    </button>
-  </nav>
-
-  <div class="sidebar-footer">
-    <div class="kb-stats">
-      <span class="stat-label">Knowledge</span>
-      <span class="stat-value" id="sidebar-kb-count">0</span>
-    </div>
-    <div class="api-key-section">
-      <label class="api-label">API KEY</label>
-      <input type="password" id="api-key-input" class="api-input" placeholder="sk-ant-..." autocomplete="off">
+  <div class="topbar-right">
+    <div class="api-wrap">
+      <span class="api-label">API KEY</span>
+      <input type="password" id="api-key" class="api-input" placeholder="sk-ant-api03-..." autocomplete="off">
+      <div class="api-dot" id="api-dot"></div>
     </div>
   </div>
-</aside>
+</header>
 
-<!-- Main -->
-<main class="main">
+<!-- ── Content ── -->
+<div class="content">
 
-  <!-- ═══ KNOWLEDGE BASE PANEL ═══ -->
-  <section class="panel active" id="panel-knowledge">
-    <div class="panel-header">
-      <h1 class="panel-title">Knowledge Base</h1>
-      <p class="panel-desc">C# 코드를 업로드하거나 붙여넣어 지식으로 저장하세요</p>
-    </div>
+  <!-- ════ KNOWLEDGE BASE ════ -->
+  <section class="panel active" id="panel-kb">
+    <div class="split-layout">
 
-    <div class="kb-input-area">
-      <div class="upload-zone" id="upload-zone">
-        <input type="file" id="file-input" accept=".cs,.csproj,.sln,.txt" multiple style="display:none" onchange="handleFiles(this.files)">
-        <div class="upload-icon">⬆</div>
-        <p class="upload-text">파일을 드래그하거나 클릭하여 업로드</p>
-        <p class="upload-sub">.cs .csproj .sln 지원</p>
-        <button class="btn-upload" onclick="document.getElementById('file-input').click()">파일 선택</button>
-      </div>
-
-      <div class="paste-area">
-        <div class="paste-header">
-          <div class="paste-meta">
-            <input type="text" id="paste-filename" class="meta-field" placeholder="파일명 (예: UserService.cs)">
-            <input type="text" id="paste-namespace" class="meta-field" placeholder="Namespace">
+      <div class="split-left">
+        <div class="card">
+          <div class="card-hdr">
+            <h2 class="card-title">코드 추가</h2>
           </div>
-        </div>
-        <div class="code-editor-wrap">
-          <div class="line-numbers" id="line-numbers">1</div>
-          <textarea id="paste-code" class="code-textarea" placeholder="// C# 코드를 여기에 붙여넣으세요..." oninput="updateLineNumbers(this)" spellcheck="false"></textarea>
-        </div>
-        <div class="paste-actions">
-          <button class="btn-primary" onclick="analyzeAndStore()">
-            <span class="btn-icon">✦</span> 분석 & 저장
-          </button>
-          <button class="btn-ghost" onclick="clearPaste()">지우기</button>
-          <span id="kb-analyze-status" class="status-text"></span>
-        </div>
-      </div>
-    </div>
+          <div class="card-body">
 
-    <div class="kb-list-section">
-      <div class="section-header">
-        <h2 class="section-title">저장된 지식 <span class="count-badge" id="kb-count-badge">0</span></h2>
-        <div class="section-actions">
-          <button class="btn-ghost btn-sm" onclick="exportKB()">내보내기</button>
-          <button class="btn-ghost btn-sm" onclick="document.getElementById('import-file').click()">가져오기</button>
-          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importKB(this.files[0])">
-        </div>
-      </div>
-      <div id="kb-list" class="kb-grid">
-        <div class="kb-empty">
-          <div class="empty-icon">◈</div>
-          <p>아직 저장된 코드가 없습니다</p>
-        </div>
-      </div>
-    </div>
-  </section>
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('finp').click()">
+              <input type="file" id="finp" accept=".cs,.csproj,.sln,.txt" multiple style="display:none" onchange="handleFiles(this.files)">
+              <svg class="up-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p class="up-title">파일 업로드</p>
+              <p class="up-sub">.cs · .csproj · .sln 지원</p>
+            </div>
 
-  <!-- ═══ CODE EDITOR PANEL ═══ -->
-  <section class="panel" id="panel-editor">
-    <div class="panel-header">
-      <h1 class="panel-title">Code Editor</h1>
-      <p class="panel-desc">코드를 작성하고 프롬프트로 수정하세요</p>
-    </div>
+            <div class="or-divider"><span>또는 직접 붙여넣기</span></div>
 
-    <div class="editor-layout">
-      <div class="editor-main">
-        <div class="editor-toolbar">
-          <div class="file-tabs">
-            <div class="file-tab active" id="editor-tab-name">Program.cs</div>
-          </div>
-          <div class="toolbar-actions">
-            <input type="text" id="editor-filename" class="toolbar-input" value="Program.cs" onchange="document.getElementById('editor-tab-name').textContent=this.value">
-            <button class="btn-ghost btn-sm" onclick="copyEditorCode()">복사</button>
-            <button class="btn-ghost btn-sm" onclick="clearEditor()">지우기</button>
-            <button class="btn-primary btn-sm" onclick="sendToAgent()">AI 수정 →</button>
-          </div>
-        </div>
-        <div class="code-editor-wrap tall">
-          <div class="line-numbers" id="editor-line-numbers">1</div>
-          <textarea id="editor-code" class="code-textarea" placeholder="// 여기에 수정할 코드를 작성하세요..." oninput="updateEditorLineNumbers(this)" spellcheck="false"></textarea>
-        </div>
-      </div>
+            <div class="field-pair">
+              <input type="text" id="paste-name" class="field-input" placeholder="파일명 (예: UserService.cs)">
+              <input type="text" id="paste-ns"   class="field-input" placeholder="Namespace">
+            </div>
 
-      <div class="editor-sidebar">
-        <div class="modify-panel">
-          <h3 class="sub-title">프롬프트로 수정</h3>
-          <textarea id="modify-prompt" class="prompt-textarea" placeholder="수정 요청을 입력하세요...
-예: 'null 체크 추가해줘'
-예: 'async/await으로 변환해줘'
-예: 'LINQ로 리팩토링해줘'"></textarea>
-          <button class="btn-primary full" onclick="modifyCode()">
-            <span class="btn-icon">◉</span> 코드 수정
-          </button>
-          <div id="modify-status" class="status-text"></div>
-        </div>
+            <div class="code-editor" id="ce-kb">
+              <div class="line-nums" id="ln-kb">1</div>
+              <textarea id="paste-code" class="code-ta" placeholder="// 코드를 붙여넣으세요..."
+                oninput="syncLn(this,'ln-kb')" spellcheck="false"></textarea>
+            </div>
 
-        <div class="history-panel">
-          <h3 class="sub-title">수정 히스토리</h3>
-          <div id="history-list" class="history-list">
-            <p class="empty-small">아직 수정 내역이 없습니다</p>
+            <div class="action-row">
+              <button class="btn-primary" id="abtn" onclick="analyzeCode()">
+                <span class="spinner hidden" id="a-spin"></span>
+                <span id="a-lbl">분석 &amp; 저장</span>
+              </button>
+              <button class="btn-ghost" onclick="clearPaste()">지우기</button>
+              <span id="kb-status" class="status-txt"></span>
+            </div>
+
           </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- ═══ AI AGENT PANEL ═══ -->
-  <section class="panel" id="panel-agent">
-    <div class="panel-header">
-      <h1 class="panel-title">AI Agent</h1>
-      <p class="panel-desc">지식 베이스를 참조하여 새 코드를 생성합니다</p>
-    </div>
-
-    <div class="agent-layout">
-      <div class="chat-container">
-        <div id="chat-messages" class="chat-messages">
-          <div class="chat-msg assistant">
-            <div class="msg-avatar">AI</div>
-            <div class="msg-content">
-              <p>안녕하세요! C# Knowledge Agent입니다.</p>
-              <p>지식 베이스에 저장된 코드 패턴을 참조하여 일관성 있는 코드를 생성합니다.</p>
-              <p class="msg-hint">예시: "UserService와 같은 패턴으로 ProductService 만들어줘"</p>
+      <div class="split-right">
+        <div class="card card-fill">
+          <div class="card-hdr">
+            <h2 class="card-title">저장된 지식 <span class="badge" id="kb-count">0</span></h2>
+            <div class="hdr-actions">
+              <button class="btn-link" onclick="exportKB()">내보내기</button>
+              <button class="btn-link" onclick="document.getElementById('imp-inp').click()">가져오기</button>
+              <input type="file" id="imp-inp" accept=".json" style="display:none" onchange="importKB(this.files[0])">
+            </div>
+          </div>
+          <div class="card-body scroll">
+            <div id="kb-list" class="kb-list">
+              <div class="empty-state">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <p>아직 저장된 코드가 없습니다</p>
+                <p class="empty-sub">왼쪽에서 파일을 업로드하거나 코드를 붙여넣으세요</p>
+              </div>
             </div>
           </div>
         </div>
-        <div class="chat-input-area">
-          <div class="kb-pills" id="kb-pills"></div>
-          <div class="chat-input-row">
-            <textarea id="chat-input" class="chat-textarea" placeholder="코드 생성 요청을 입력하세요... (Shift+Enter로 줄바꿈)" onkeydown="handleChatKey(event)" rows="2"></textarea>
-            <button class="btn-send" onclick="sendChat()" id="send-btn">
-              <span>→</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════ EDITOR ════ -->
+  <section class="panel" id="panel-editor">
+    <div class="editor-layout">
+
+      <div class="card editor-card">
+        <div class="editor-bar">
+          <div class="file-tabs">
+            <span class="file-tab active" id="ed-tab">Program.cs</span>
+          </div>
+          <div class="bar-actions">
+            <input type="text" id="ed-fname" class="inline-input" value="Program.cs"
+              oninput="document.getElementById('ed-tab').textContent=this.value">
+            <button class="btn-link" onclick="copyEditorCode()">복사</button>
+            <button class="btn-link" onclick="clearEditor()">지우기</button>
+            <button class="btn-primary sm" onclick="toAgent()">AI Agent →</button>
+          </div>
+        </div>
+        <div class="code-editor grow" id="ce-ed">
+          <div class="line-nums" id="ln-ed">1</div>
+          <textarea id="ed-code" class="code-ta"
+            placeholder="// 코드를 작성하거나 Knowledge Base에서 불러오세요..."
+            oninput="syncLn(this,'ln-ed')" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <div class="editor-side">
+        <div class="card">
+          <div class="card-hdr"><h2 class="card-title">AI 코드 수정</h2></div>
+          <div class="card-body">
+            <textarea id="mod-prompt" class="prose-ta"
+              placeholder="수정 요청을 입력하세요.
+
+예) null 체크 추가해줘
+예) async/await 으로 변환
+예) LINQ 로 리팩토링해줘
+예) 단위 테스트 추가해줘"></textarea>
+            <button class="btn-primary full" id="mbtn" onclick="modifyCode()">
+              <span class="spinner hidden" id="m-spin"></span>
+              <span id="m-lbl">코드 수정</span>
             </button>
+            <span id="mod-status" class="status-txt"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr"><h2 class="card-title">수정 히스토리</h2></div>
+          <div class="card-body scroll" style="max-height:200px">
+            <div id="hist-list" class="hist-list">
+              <p class="muted">수정 내역이 없습니다</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="context-panel">
-        <h3 class="sub-title">참조 중인 지식</h3>
-        <div id="context-list" class="context-list">
-          <p class="empty-small">지식 베이스가 비어 있습니다</p>
-        </div>
-        <button class="btn-ghost full" onclick="showPanel('knowledge')">+ 지식 추가</button>
-      </div>
     </div>
   </section>
 
-  <!-- ═══ VERIFY PANEL ═══ -->
-  <section class="panel" id="panel-verify">
-    <div class="panel-header">
-      <h1 class="panel-title">Code Verify</h1>
-      <p class="panel-desc">코드 리뷰 및 단위 테스트를 자동 생성합니다</p>
-    </div>
+  <!-- ════ AGENT ════ -->
+  <section class="panel" id="panel-agent">
+    <div class="agent-layout">
 
-    <div class="verify-layout">
-      <div class="verify-input">
-        <div class="sub-title-row">
-          <h3 class="sub-title">검증할 코드</h3>
-          <button class="btn-ghost btn-sm" onclick="loadFromEditor()">에디터에서 불러오기</button>
+      <div class="card chat-card">
+        <div class="card-hdr">
+          <h2 class="card-title">AI Agent</h2>
+          <div id="ref-pills" class="pill-row"></div>
         </div>
-        <div class="code-editor-wrap medium">
-          <div class="line-numbers" id="verify-line-numbers">1</div>
-          <textarea id="verify-code" class="code-textarea" placeholder="// 검증할 C# 코드를 입력하세요..." oninput="updateVerifyLineNumbers(this)" spellcheck="false"></textarea>
+        <div id="chat-body" class="chat-body">
+          <div class="msg ai">
+            <div class="avatar">AI</div>
+            <div class="bubble">
+              <p>안녕하세요! 지식 베이스를 참조하여 일관된 패턴의 C# 코드를 생성합니다.</p>
+              <p class="hint">예: "UserService와 같은 패턴으로 ProductService 만들어줘"</p>
+            </div>
+          </div>
         </div>
-
-        <div class="verify-options">
-          <label class="check-option">
-            <input type="checkbox" id="opt-review" checked>
-            <span>코드 리뷰</span>
-          </label>
-          <label class="check-option">
-            <input type="checkbox" id="opt-tests" checked>
-            <span>단위 테스트 생성</span>
-          </label>
-          <label class="check-option">
-            <input type="checkbox" id="opt-bugs">
-            <span>버그 분석</span>
-          </label>
-          <label class="check-option">
-            <input type="checkbox" id="opt-perf">
-            <span>성능 분석</span>
-          </label>
+        <div class="chat-foot">
+          <textarea id="chat-inp" class="chat-ta" rows="2"
+            placeholder="코드 생성 요청... (Enter 전송, Shift+Enter 줄바꿈)"
+            onkeydown="chatKey(event)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendChat()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </div>
-
-        <button class="btn-primary full" onclick="verifyCode()" id="verify-btn">
-          <span class="btn-icon">◎</span> 검증 시작
-        </button>
       </div>
 
-      <div class="verify-results">
-        <div id="verify-output" class="verify-output">
-          <div class="verify-placeholder">
-            <div class="placeholder-icon">◎</div>
+      <div class="card agent-side">
+        <div class="card-hdr"><h2 class="card-title">참조 지식</h2></div>
+        <div class="card-body scroll">
+          <div id="ctx-list" class="ctx-list">
+            <p class="muted">지식 베이스가 비어 있습니다</p>
+          </div>
+        </div>
+        <div class="card-foot">
+          <button class="btn-ghost full" onclick="switchTab(document.querySelector('[data-panel=kb]'),'kb')">
+            + 지식 추가
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════ VERIFY ════ -->
+  <section class="panel" id="panel-verify">
+    <div class="verify-layout">
+
+      <div class="card verify-left">
+        <div class="card-hdr">
+          <h2 class="card-title">검증할 코드</h2>
+          <button class="btn-link" onclick="loadEditorCode()">에디터에서 불러오기</button>
+        </div>
+        <div class="code-editor grow" id="ce-vr">
+          <div class="line-nums" id="ln-vr">1</div>
+          <textarea id="vr-code" class="code-ta"
+            placeholder="// 검증할 C# 코드를 입력하세요..."
+            oninput="syncLn(this,'ln-vr')" spellcheck="false"></textarea>
+        </div>
+        <div class="card-foot">
+          <div class="opts-row">
+            <label class="opt-label"><input type="checkbox" id="o-review" checked> 코드 리뷰</label>
+            <label class="opt-label"><input type="checkbox" id="o-tests"  checked> 단위 테스트</label>
+            <label class="opt-label"><input type="checkbox" id="o-bugs"> 버그 분석</label>
+            <label class="opt-label"><input type="checkbox" id="o-perf"> 성능 분석</label>
+          </div>
+          <button class="btn-primary" id="vbtn" onclick="verifyCode()">
+            <span class="spinner hidden" id="v-spin"></span>
+            <span id="v-lbl">검증 시작</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card verify-right">
+        <div class="card-hdr"><h2 class="card-title">검증 결과</h2></div>
+        <div id="vr-out" class="vr-out">
+          <div class="empty-state">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <p>코드를 입력하고 검증을 시작하세요</p>
           </div>
         </div>
       </div>
+
     </div>
   </section>
 
-</main>
+</div>
 
 <div id="toast" class="toast"></div>
-
 <script src="js/app.js"></script>
 </body>
 </html>
